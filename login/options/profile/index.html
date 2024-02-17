@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <link rel="stylesheet" href="./profile.css">
+    <script src="https://kit.fontawesome.com/52662e94e6.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div class="profile-container">
+        <div class="profile-card">
+            <span class="coins">
+                <i class="fa-solid fa-coins" style="color: #CD6A1C; margin-right: 5px;"></i>
+                <span id="balance" style="margin-right: 5px;"></span>   Points
+              </span>
+            <div class="left">
+                <img class="profilePic" src="https://expertphotography.b-cdn.net/wp-content/uploads/2020/08/profile-photos-4.jpg" alt="">
+                <div class="txt">
+                    <p class="user">
+                        <span id="name" class="name"></span> <a href="https://drive.google.com/uc?export=download&id=16EjC--OX_gSvFNkwk77FR7AFYZR4l_qR"><i class="fa-solid fa-circle-info" style="margin-left: 5px;"></i></a>
+                    </p>
+                    <p class="info">abc@gmail.com</p>
+                </div>
+                <div class="badgecontainer">
+                    <img id="trail" src="./../../../assets/traiilblazer.png" style="display: none;" alt="">
+                    <img id="part" src="./../../../assets/activeparticipant].png" stmle="display: none;" alt="">
+                    <img id="unity" src="./../../../assets/unitystar.png" style="display: none;" alt="">
+                    <img id="mile" src="./../../../assets/milestone master.png0" style="display: none;" alt="">
+                    <img id="voice" src="./../../../assets/voicevanguard.png" style="display: none;" alt="">
+                </div>
+            </div>
+            <div class="right">
+                <div class="info">
+                    <p><b>Community Engagement: </b>
+                    <div class="bar communityCount">
+                        <div class="value"></div>
+                    </div>
+                    </p>
+                    <p><b>Peer-to-peer storytelling: </b>
+                    <div class="bar postsCount">
+                        <div class="value"></div>
+                    </div>
+                    </p>
+                    <p><b>Gamer: </b>
+                    <div class="bar gamecount">
+                        <div class="value"></div>
+                    </div>
+                    </p>
+                    <p><b>Challenges: </b>
+                    <div class="bar challengesCount">
+                        <div class="value"></div>
+                    </div>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <button onclick="logout()" class="addPostBtn">Log Out</button>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-firestore.js"></script>
+    <script src="../../../auth.js"></script>
+    <script>
+        function logout() {
+            auth.signOut();
+        }
+        var Curuser = null;
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                Curuser = user;
+                console.log(Curuser);
+                document.getElementById('name').innerText = user.displayName;
+                document.querySelector('.info').innerText = user.email;
+                document.querySelector('.profilePic').setAttribute('src', user.photoURL||"https://upload.wikimedia.org/wikipedia/commons/b/b5/Windows_10_Default_Profile_Picture.svg");
+                db.collection("users").doc(user.uid).get().then((doc) => {
+                    if (doc.exists) {
+                        console.log(doc.data());
+                        document.querySelector('.gamecount .value').style.width = doc.data().gameplay*4+"%";
+                        document.getElementById("balance").innerHTML = doc.data().points||0;
+                        var pts = doc.data().points||0;
+                        if(pts>=50){
+                            document.getElementById("trail").style.display = "block";
+                        }
+                        if(pts>=80){
+                            document.getElementById("part").style.display = "block";
+                        }
+                        if(pts>=100){
+                            document.getElementById("unity").style.display = "block";
+                        }
+                        if(pts>=150){
+                            document.getElementById("mile").style.display = "block";
+                        }
+                        if(pts>=200){
+                            document.getElementById("voice").style.display = "block";
+                        }
+                    } else {
+                        window.location.href = '../../';
+                    }
+                }).catch((error) => {
+                    console.log("Error getting document:", error);
+                });
+
+                // no of posts by user
+                db.collection("posts").where("postBy", "==", user.uid).get().then((querySnapshot) => {
+                    document.querySelector('.postsCount .value').style.width = querySnapshot.size*5 + "%";
+                });
+
+                db.collection("forums").where("postBy", "==", user.uid).get().then((querySnapshot) => {
+                    document.querySelector('.communityCount .value').style.width = querySnapshot.size*5 + "%";
+                });
+
+                db.collection("challenges").where("postBy", "==", user.uid).get().then((querySnapshot) => {
+                    document.querySelector('.challengesCount .value').style.width = querySnapshot.size*5 + "%";
+                });
+
+            } else {
+                window.location.href = '../../';
+            }
+        });
+    </script>
+</body>
+
+</html>

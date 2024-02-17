@@ -21,7 +21,7 @@
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" required>
 
-                <button><a href="./options">Login</a></button>
+                <button><a>Login</a></button>
             </form>
             <p class="or">OR</p>
             <button id="googleLogin">
@@ -43,26 +43,48 @@
             const password = loginForm["password"].value;
             auth.signInWithEmailAndPassword(email, password).then((cred) => {
                 console.log(cred.user);
-                window.location.href = "./options";
+                // window.location.href = "./options";
+                db.collection("users").doc(cred.user.uid).get().then((u)=>{
+                    if(u.exists && u.data().index==-1||!u.data().index){
+                        window.location.href = "./moreinfo.html";
+                    }else{
+                        window.location.href = "./options"
+                    }
+                })
             });
         });
+
         const googleLogin = document.getElementById("googleLogin");
         googleLogin.addEventListener("click", (e) => {
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider).then((cred) => {
                 console.log(cred.user);
-                db.collection("users").doc(cred.user.uid).set({
-                    name: cred.user.displayName,
-                    email: cred.user.email,
-                    index: -1,
-                    password: "",
-                    type: "none"
-                }).then(() => {
-                    console.log("Document successfully written!");
-                    window.location.href = "./options";
+                // check if user exists in database
+                db.collection("users").doc(cred.user.uid).get().then((doc) => {
+                    if (doc.exists) {
+                        console.log("Document data:", doc.data());
+                        window.location.href = "./options";
+                    } else {
+                        // doc.data() will be undefined in this case
+                        console.log("No such document!");
+                        // create user in database
+                        db.collection("users").doc(cred.user.uid).set({
+                            name: cred.user.displayName,
+                            email: cred.user.email,
+                            index: -1,
+                            password: "",
+                            type: "user"
+                        }).then(() => {
+                            console.log("Document successfully written!");
+                            // get some more info
+                            window.location.href = "./moreinfo.html";
+                        }).catch((error) => {
+                            console.error("Error writing document: ", error);
+                        })
+                    }
                 }).catch((error) => {
-                    console.error("Error writing document: ", error);
-                })
+                    console.log("Error getting document:", error);
+                });
             });
         });
     </script>

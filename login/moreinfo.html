@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" href="./login.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+
+<body>
+    <div class="login-splash-container">
+        <div class="form-container">
+            <h1><span style="color: #D3315A;">S</span>
+                <span style="color: #00ADA9;">C</span>
+                <span style="color: #7D5F91;">A</span>
+                <span style="color: #EA872C;">L</span>
+                <span style="color: #D3315A;">E</span></h1>
+            <form id="loginForm">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" disabled>
+                <label for="drugIndex">
+                    Rate your addiction: 1-5 <a href="https://drive.google.com/uc?export=download&id=1dzn6wgS3ToJz8bqzhUcUeVwwdqLklNVc"><i class="fa-solid fa-book"></i></a>
+                </label>
+                <input type="range" name="drugIndex" id="drugIndex" min="0" max="5">
+
+                <label>
+                    Your current location
+                </label>
+                <button id="getLocationBtn" type="button">Get My Location</button>
+                <p id="location"></p>
+                <button>Submit</button>
+            </form>
+        </div>
+        <button class="predictAddiction addPostBtn">Predict Addiction Level</button>
+        <div class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2 id="cont">Which of the following things you know?</h2>
+                <div class="grid-container" id="options">
+                    <div><img src="../assets/drug1.jpg" alt="" data-value="-1"></div>
+                    <div><img src="../assets/other1.webp" alt="" data-value="0"></div>
+                    <div><img src="../assets/other2.jpeg" alt="" data-value="0"></div>
+                    <div><img src="../assets/drug4.jpeg" alt="" data-value="-1"></div>
+                    <div><img src="../assets/other3.webp" alt="" data-value="0"></div>
+                    <div><img src="../assets/other4.jpg" alt="" data-value="0"></div>
+                    <div><img src="../assets/drug5.jpeg" alt="" data-value="-1"></div>
+                    <div><img src="../assets/other5.jpg" alt="" data-value="0"></div>
+                    <div><img src="../assets/other6.webp" alt="" data-value="0"></div>
+                    <div><img src="../assets/other7.webp" alt="" data-value="0"></div>
+                    <div><img src="../assets/other8.webp" alt="" data-value="0"></div>
+                    <div><img src="../assets/other9.jpg" alt="" data-value="0"></div>
+                    <div><img src="../assets/other10.webp" alt="" data-value="0"></div>
+                    <div><img src="../assets/other11.webp" alt="" data-value="0"></div>
+                    <div><img src="../assets/other13.jpg" alt="" data-value="0"></div>
+                    <div><img src="../assets/other12.jpg" alt="" data-value="0"></div>
+                    <div><img src="../assets/other14.jpg" alt="" data-value="0"></div>
+                    <div><img src="../assets/other15.jpeg" alt="" data-value="0"></div>
+                    <div><img src="../assets/drug3.jpeg" alt="" data-value="-1"></div>
+                    <div><img src="../assets/other16.webp" alt="" data-value="0"></div>
+                    <div><img src="../assets/other17.webp" alt="" data-value="0"></div>
+                    <div><img src="../assets/other18.jpg" alt="" data-value="0"></div>
+                    <div><img src="../assets/other19.jpg" alt="" data-value="0"></div>
+                    <div><img src="../assets/other20.jpeg" alt="" data-value="0"></div>
+                    <div><img src="../assets/drug2.jpg" alt="" data-value="-1"></div>
+                </div>
+                <button class="submit" id="submit">Submit</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-firestore.js"></script>
+
+    <script src="../auth.js"></script>
+    <script>
+        var optionsLevel = document.querySelectorAll("#options div");
+        var score = 0;
+        Array.from(optionsLevel).forEach((dv)=>{
+            console.log(dv);
+            dv.addEventListener("click",(e)=>{
+                if(dv.classList.contains("active")){
+                    dv.classList.remove("active");
+                    score += parseInt(dv.querySelector("img").getAttribute("data-value"));
+                }else{
+                    dv.classList.add("active");
+                    score -= parseInt(dv.querySelector("img").getAttribute("data-value"));
+                }
+                console.log(score);
+                if(score<0){
+                    score = 0;
+                }else if(score>5){
+                    score = 5;
+                }
+                document.querySelector("#drugIndex").value = score;
+            });
+        });
+        document.querySelector(".predictAddiction").addEventListener("click",()=>{
+            document.querySelector(".modal").style.display = "flex";
+        });
+        document.querySelector(".modal .close").addEventListener("click",()=>{
+            document.querySelector(".modal").style.display = "none";
+        });
+        document.getElementById("submit").addEventListener("click", (e) => {
+            alert("Your addiction level is: " + score);
+            document.getElementById("cont").style.innerHTML = "Your addiction level is: " + score;
+        })
+        var Curuser = null;
+        let lat=0,lon=0;
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                console.log("User is signed in");
+                Curuser = user;
+                db.collection("users").doc(user.uid).get().then((doc) => {
+                    if (doc.exists) {
+                        email.value = doc.data().email;       
+                    } else {
+                        window.location.href = "./";
+                    }
+                }).catch((error) => {
+                    console.log("Error getting document:", error);
+                });
+            } else {
+                console.log("User is signed out");
+            }
+        });
+
+        const loginForm = document.getElementById("loginForm");
+        loginForm.addEventListener("submit",(e)=>{
+            e.preventDefault();
+            const drugIndex  = loginForm["drugIndex"].value;
+            db.collection('users').doc(Curuser.uid).update({
+                "index": drugIndex,
+                location: {
+                    latitude : lat,
+                    longitude: lon
+                }
+            }).then(()=>{
+                console.log("Profile Updated Successfully!");
+                window.location.href = "./options";
+            })
+        })
+        getLocationBtn.addEventListener("click",getLocation);
+        function getLocation(e){
+            e.preventDefault();
+            if (navigator.geolocation){
+                navigator.geolocation.getCurrentPosition(showPosition, (err)=>{
+                    alert("Could not retrieve your location.");
+                });
+                function  showPosition(position){
+                    var x=document.getElementById("location");
+                    x.innerHTML="Latitude: "+ position.coords.latitude+" Longitude"+" "+position.coords.longitude;
+                    lat = parseFloat(position.coords.latitude);
+                    lon = parseFloat(position.coords.longitude);
+                    x.innerHTML="Latitude: "+lat+"\tLongitude: " +lon;
+                }
+            }else{
+                alert("Location is not supported by your device");
+            }
+        }
+        
+    </script>
+</body>
+
+</html>
